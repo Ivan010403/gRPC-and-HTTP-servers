@@ -2,6 +2,7 @@ package app
 
 import (
 	grpcserver "gRPCserver/internal/app/grpc_server"
+	cloudStorage "gRPCserver/internal/services"
 	"log/slog"
 )
 
@@ -14,7 +15,9 @@ func NewApp(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int) *App {
 
 	//TODO:
 
-	srv := grpcserver.NewServer(logger, port, wrkSaveDelete, wrkCheckFiles)
+	cloud := cloudStorage.NewCloud(logger)
+
+	srv := grpcserver.NewServer(logger, port, wrkSaveDelete, wrkCheckFiles, cloud)
 
 	return &App{
 		GRPCsrv: srv,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gRPCserver/internal/app"
 	"gRPCserver/internal/config"
 	"log/slog"
@@ -22,6 +23,8 @@ func main() {
 		logger.Error("failed to read config")
 		return
 	}
+
+	fmt.Println(cfg)
 
 	logger.Info("config has been read successfully")
 

@@ -4,25 +4,38 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 
 	proto "github.com/Ivan010403/proto/protoc/go"
 )
+
+type FileWork interface {
+	Write([]byte, string, string) error
+}
 
 type StreamHandler struct {
 	ChanSave   chan struct{}
 	ChanDelete chan struct{}
 	ChanCheck  chan struct{}
 	proto.UnimplementedCloudServer
+	Worker FileWork
 }
 
+// TODO: add validation
 func (s *StreamHandler) UploadFile(stream proto.Cloud_UploadFileServer) error {
 	s.ChanSave <- struct{}{}
 	defer func() {
 		<-s.ChanSave
 	}()
 
+	fmt.Println("Hello from UploadFile")
+
 	file_bytes := bytes.Buffer{}
+
+	r, err := stream.Recv()
+	if err != nil {
+		return fmt.Errorf("can not get NameFile from req")
+	}
+	name := r.GetNameFile()
 
 	for {
 		r, err := stream.Recv()
@@ -31,17 +44,22 @@ func (s *StreamHandler) UploadFile(stream proto.Cloud_UploadFileServer) error {
 			break
 		}
 		if err != nil {
-			break
+			return err
 		}
 
-		file_bytes.Write(r.GetFile())
+		_, err = file_bytes.Write(r.GetFile())
+		if err != nil {
+			return fmt.Errorf("failed to write in internal buff %w", err)
+		}
 	}
 
-	f, err := os.Create("test2.jpg")
+	fmt.Println(file_bytes.Len(), name)
+
+	err = s.Worker.Write(file_bytes.Bytes(), name, "jpg")
+
 	if err != nil {
-		fmt.Println("error creation", err)
+		return fmt.Errorf("failed in calling Write() %w", err)
 	}
 
-	file_bytes.WriteTo(f)
 	return nil
 }

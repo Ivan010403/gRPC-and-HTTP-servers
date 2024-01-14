@@ -16,7 +16,9 @@ type Server struct {
 	port    int
 }
 
-func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int) *Server {
+//TODO: change name FileWork
+
+func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int, wrk handlers.FileWork) *Server {
 	srv := grpc.NewServer()
 
 	wrkSave := make(chan struct{}, wrkSaveDelete)
@@ -26,7 +28,9 @@ func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int) *Ser
 	proto.RegisterCloudServer(srv, &handlers.StreamHandler{
 		ChanSave:   wrkSave,
 		ChanDelete: wrkDelete,
-		ChanCheck:  wrkCheck})
+		ChanCheck:  wrkCheck,
+		Worker:     wrk,
+	})
 
 	return &Server{
 		gRPCsrv: srv,

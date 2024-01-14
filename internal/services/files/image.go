@@ -1,4 +1,4 @@
-package imagefiles
+package files
 
 import (
 	"fmt"
@@ -6,13 +6,14 @@ import (
 	"os"
 )
 
-type ImageFile struct {
+// TODO: add another file  types
+type File struct {
 	Name     string
 	Filetype string
 }
 
 // TODO: validation of data (name and TYPE!)
-func (i *ImageFile) Read() ([]byte, error) {
+func (i *File) ReadFile() ([]byte, error) {
 	var file *os.File
 	path := i.Name + "." + i.Filetype
 
@@ -33,7 +34,7 @@ func (i *ImageFile) Read() ([]byte, error) {
 	return data, nil
 }
 
-func (i *ImageFile) Write(data []byte) (string, error) {
+func (i *File) WriteFile(data []byte) (string, error) {
 	var file *os.File
 	path := i.Name + "." + i.Filetype
 
