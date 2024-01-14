@@ -58,3 +58,17 @@ func (i *File) WriteFile(data []byte) (string, error) {
 	}
 	return i.Name + "." + i.Filetype, nil
 }
+
+func (i *File) DeleteFile() error {
+	full_name := i.Name + "." + i.Filetype
+
+	if _, err := os.Stat(full_name); os.IsNotExist(err) {
+		return fmt.Errorf("file or directory doesn't exist")
+	} else {
+		err := os.Remove(full_name)
+		if err != nil {
+			return fmt.Errorf("file deleting error: %w", err)
+		}
+	}
+	return nil
+}

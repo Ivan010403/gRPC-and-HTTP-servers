@@ -25,7 +25,7 @@ func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int, wrk 
 	wrkDelete := make(chan struct{}, wrkSaveDelete)
 	wrkCheck := make(chan struct{}, wrkCheckFiles)
 
-	proto.RegisterCloudServer(srv, &handlers.StreamHandler{
+	proto.RegisterCloudServer(srv, &handlers.CloudServer{
 		ChanSave:   wrkSave,
 		ChanDelete: wrkDelete,
 		ChanCheck:  wrkCheck,
