@@ -5,6 +5,8 @@ import (
 	"gRPCserver/internal/config"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -25,7 +27,17 @@ func main() {
 
 	application := app.NewApp(logger, cfg.GRPC_server.Port, cfg.GRPC_server.MaxReadWriteConn, cfg.GRPC_server.MaxCheckConn)
 
-	application.GRPCsrv.MustRun()
+	go application.GRPCsrv.MustRun()
+
+	//graceful shutdown
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
+	<-stopChan
+
+	logger.Info("stopping the application")
+	application.GRPCsrv.GracefulStop()
+	logger.Info("application successfully stoped")
+
 }
 
 // TODO: add switch with env and different levels of logging
