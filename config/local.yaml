@@ -1,0 +1,13 @@
+env: "local"
+
+grpc_server:
+  port: 4545
+  maxReadWriteConn: 10
+  maxCheckConn: 100
+
+database:
+  host: "localhost"
+  port: 8089
+  user: "postgres"
+  password: "vany2003"
+  dbname: "Notepad"
