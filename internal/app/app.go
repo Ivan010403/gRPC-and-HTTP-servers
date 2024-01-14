@@ -2,7 +2,9 @@ package app
 
 import (
 	grpcserver "gRPCserver/internal/app/grpc_server"
+	"gRPCserver/internal/config"
 	cloudStorage "gRPCserver/internal/services"
+	"gRPCserver/internal/storage/postgres"
 	"log/slog"
 )
 
@@ -10,14 +12,18 @@ type App struct {
 	GRPCsrv *grpcserver.Server
 }
 
-func NewApp(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int) *App {
-	//TODO: postgres
+func NewApp(logger *slog.Logger, cfggrpc config.GRPC_server, cfg config.DataBase) *App {
 
-	//TODO:
+	storage, err := postgres.New(cfg.Host, cfg.User, cfg.Password, cfg.Dbname, cfg.Port)
 
-	cloud := cloudStorage.NewCloud(logger)
+	if err != nil {
+		logger.Error("failed to creation db", slog.Any("err", err))
+		return nil
+	}
 
-	srv := grpcserver.NewServer(logger, port, wrkSaveDelete, wrkCheckFiles, cloud)
+	cloud := cloudStorage.NewCloud(logger, storage)
+
+	srv := grpcserver.NewServer(logger, cfggrpc.Port, cfggrpc.MaxReadWriteConn, cfggrpc.MaxCheckConn, cloud)
 
 	return &App{
 		GRPCsrv: srv,

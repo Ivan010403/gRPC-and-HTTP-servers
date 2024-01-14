@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"gRPCserver/internal/app"
 	"gRPCserver/internal/config"
 	"log/slog"
@@ -24,11 +23,9 @@ func main() {
 		return
 	}
 
-	fmt.Println(cfg)
-
 	logger.Info("config has been read successfully")
 
-	application := app.NewApp(logger, cfg.GRPC_server.Port, cfg.GRPC_server.MaxReadWriteConn, cfg.GRPC_server.MaxCheckConn)
+	application := app.NewApp(logger, cfg.GRPC_server, cfg.DataBase)
 
 	go application.GRPCsrv.MustRun()
 

@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"gRPCserver/internal/storage/postgres"
 	"io"
+	"os"
 
 	proto "github.com/Ivan010403/proto/protoc/go"
 	"google.golang.org/grpc/codes"
@@ -13,8 +15,10 @@ import (
 
 type FileWork interface {
 	Write([]byte, string, string) error
+	Update([]byte, string, string) error
 	Delete(string, string) error
 	Get(string, string) ([]byte, error)
+	GetFullData() ([]postgres.File, error)
 }
 
 type CloudServer struct {
@@ -57,12 +61,17 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 		}
 	}
 
-	err = s.Worker.Write(file_bytes.Bytes(), name, format)
-
-	if err != nil {
-		return fmt.Errorf("failed in calling Write() %w", err)
+	if _, err := os.Stat(name + "." + format); os.IsNotExist(err) {
+		err = s.Worker.Write(file_bytes.Bytes(), name, format)
+		if err != nil {
+			return fmt.Errorf("failed in calling Write() %w", err)
+		}
+	} else {
+		err = s.Worker.Update(file_bytes.Bytes(), name, format)
+		if err != nil {
+			return fmt.Errorf("failed in calling Update() %w", err)
+		}
 	}
-
 	return nil
 }
 

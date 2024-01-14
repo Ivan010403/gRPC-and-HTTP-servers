@@ -44,15 +44,26 @@ func (i *File) WriteFile(data []byte) (string, error) {
 			return "", err
 		}
 		defer file.Close()
-	} else {
-		file, err = os.Open(path)
-		if err != nil {
-			return "", err
-		}
-		defer file.Close()
 	}
 
 	_, err := file.Write(data)
+	if err != nil {
+		return "", err
+	}
+	return i.Name + "." + i.Filetype, nil
+}
+
+func (i *File) UpdateFile(data []byte) (string, error) {
+	var file *os.File
+	path := i.Name + "." + i.Filetype
+
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	_, err = file.Write(data)
 	if err != nil {
 		return "", err
 	}
