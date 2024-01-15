@@ -1,4 +1,4 @@
-package cloudStorage
+package service
 
 import (
 	"gRPCserver/internal/services/files"

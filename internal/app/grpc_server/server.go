@@ -38,7 +38,7 @@ func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int, wrk 
 }
 
 func (s *Server) MustRun() {
-	s.log.Info("starting gRPC server", slog.String("path", "app.grpc_server.server.MustRun"), slog.Int("port", s.port))
+	s.log.Info("starting gRPC server", slog.Int("port", s.port))
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.port))
 	if err != nil {
@@ -51,7 +51,7 @@ func (s *Server) MustRun() {
 }
 
 func (s *Server) GracefulStop() {
-	s.log.Info("stopping server", slog.String("path", "app.grpc_server.server.GracefulStop"))
+	s.log.Info("stopping grpc server")
 
 	s.gRPCsrv.GracefulStop()
 }

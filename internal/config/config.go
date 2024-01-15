@@ -34,15 +34,19 @@ func ReadConfig() (*Config, error) {
 		return nil, fmt.Errorf("CONFIG_PATH is wrong")
 	}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("Config file doesn't exist: %s", configPath)
+	return ReadConfigFromPath(configPath), nil
+}
+
+func ReadConfigFromPath(path string) *Config {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		panic("Config file doesn't exist")
 	}
 
 	var cfg Config
 
-	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		return nil, fmt.Errorf("can not read config %w", err)
+	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
+		panic("can not read config")
 	}
 
-	return &cfg, nil
+	return &cfg
 }

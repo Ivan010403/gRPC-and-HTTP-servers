@@ -3,7 +3,7 @@ package app
 import (
 	grpcserver "gRPCserver/internal/app/grpc_server"
 	"gRPCserver/internal/config"
-	cloudStorage "gRPCserver/internal/services"
+	service "gRPCserver/internal/services"
 	"gRPCserver/internal/storage/postgres"
 	"log/slog"
 )
@@ -22,7 +22,7 @@ func NewApp(logger *slog.Logger, cfggrpc config.GRPC_server, cfg config.DataBase
 
 	logger.Info("database has been created successfully")
 
-	cloud := cloudStorage.NewCloud(logger, storage)
+	cloud := service.NewCloud(logger, storage)
 
 	srv := grpcserver.NewServer(logger, cfggrpc.Port, cfggrpc.MaxReadWriteConn, cfggrpc.MaxCheckConn, cloud)
 
