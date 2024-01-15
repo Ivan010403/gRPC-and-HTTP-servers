@@ -1,12 +1,10 @@
 package files
 
 import (
-	"fmt"
 	"io"
 	"os"
 )
 
-// TODO: add another file  types
 type File struct {
 	Name     string
 	Filetype string
@@ -18,7 +16,7 @@ func (i *File) ReadFile() ([]byte, error) {
 	path := "../../storage/" + i.Name + "." + i.Filetype
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return nil, fmt.Errorf("file or directory doesn't exist")
+		return nil, err
 	} else {
 		file, err = os.Open(path)
 		if err != nil {
@@ -74,11 +72,11 @@ func (i *File) DeleteFile() error {
 	full_name := "../../storage/" + i.Name + "." + i.Filetype
 
 	if _, err := os.Stat(full_name); os.IsNotExist(err) {
-		return fmt.Errorf("file or directory doesn't exist")
+		return err
 	} else {
 		err := os.Remove(full_name)
 		if err != nil {
-			return fmt.Errorf("file deleting error: %w", err)
+			return err
 		}
 	}
 	return nil

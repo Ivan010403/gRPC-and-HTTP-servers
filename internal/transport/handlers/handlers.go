@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const maxChunkSize = 1024
+
 type FileWork interface {
 	Write([]byte, string, string) error
 	Update([]byte, string, string) error
@@ -28,8 +30,6 @@ type CloudServer struct {
 	Worker FileWork
 }
 
-// TODO: add validation ON ALL FILE
-// TODO: make normal logging!!
 func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 	s.ChanSave <- struct{}{}
 	defer func() {
@@ -40,7 +40,7 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 
 	r, err := stream.Recv()
 	if err != nil {
-		return status.Error(codes.Internal, "can't read namefile and formatfile from stream")
+		return status.Error(codes.Internal, "reading namefile and formatfile from stream error")
 	}
 	name := r.GetNameFile()
 	format := r.GetFileFormat()
@@ -52,24 +52,24 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 			break
 		}
 		if err != nil {
-			return status.Error(codes.Internal, "can't read from stream")
+			return status.Error(codes.Internal, "reading from stream error")
 		}
 
 		_, err = file_bytes.Write(r.GetFile())
 		if err != nil {
-			return status.Error(codes.Internal, "can't write into internal buff")
+			return status.Error(codes.Internal, "writing into internal buff error")
 		}
 	}
 
 	if _, err := os.Stat("../../storage/" + name + "." + format); os.IsNotExist(err) {
 		err = s.Worker.Write(file_bytes.Bytes(), name, format)
 		if err != nil {
-			return status.Error(codes.Internal, "can't write file")
+			return status.Error(codes.Internal, "writing to file error")
 		}
 	} else {
 		err = s.Worker.Update(file_bytes.Bytes(), name, format)
 		if err != nil {
-			return status.Error(codes.Internal, "can't update file")
+			return status.Error(codes.Internal, "updating file error")
 		}
 	}
 	return nil
@@ -80,14 +80,14 @@ func (s *CloudServer) DeleteFile(ctx context.Context, request *proto.DeleteFileR
 	defer func() {
 		<-s.ChanDelete
 	}()
-	//TODO: change that unconvenient
+
 	name := request.GetNameFile()
 	format := request.GetFileFormat()
 
 	err := s.Worker.Delete(name, format)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, "can't delete file")
+		return nil, status.Error(codes.Internal, "deleting file error")
 	}
 
 	return &proto.DeleteFileResponce{FullName: name + format}, nil
@@ -103,20 +103,19 @@ func (s *CloudServer) GetFile(request *proto.GetFileRequest, stream proto.Cloud_
 
 	data, err := s.Worker.Get(request.GetNameFile(), request.GetFileFormat())
 	if err != nil {
-		return status.Error(codes.Internal, "can't get file")
+		return status.Error(codes.Internal, "getting file error")
 	}
 
 	buff := &proto.GetFileResponce{}
 
-	//TODO: change 1024 to normal value
-	for currentByte := 0; currentByte < len(data); currentByte += 1024 {
-		if currentByte+1024 > len(data) {
-			buff.File = data[currentByte:len(data)]
+	for currentByte := 0; currentByte < len(data); currentByte += maxChunkSize {
+		if currentByte+maxChunkSize > len(data) {
+			buff.File = data[currentByte:]
 		} else {
-			buff.File = data[currentByte : currentByte+1024]
+			buff.File = data[currentByte : currentByte+maxChunkSize]
 		}
 		if err := stream.Send(buff); err != nil {
-			return status.Error(codes.Internal, "can't send file")
+			return status.Error(codes.Internal, "sending file error")
 		}
 	}
 
@@ -131,18 +130,17 @@ func (s *CloudServer) GetFullData(request *proto.GetFullDataRequest, stream prot
 
 	data, err := s.Worker.GetFullData()
 	if err != nil {
-		return status.Error(codes.Internal, "can't get full data")
+		return status.Error(codes.Internal, "geting full data error")
 	}
 
 	if err := stream.Send(&proto.GetFullDataResponce{Size: int64(len(data))}); err != nil {
-		return status.Error(codes.Internal, "can't send size of full data")
+		return status.Error(codes.Internal, "sending size of full data error")
 	}
 
 	for i := 0; i < len(data); i++ {
 		if err := stream.Send(&proto.GetFullDataResponce{Name: data[i].Name, CreationDate: data[i].Creation_date, UpdatingDate: data[i].Update_date}); err != nil {
-			return err
+			return status.Error(codes.Internal, "sending data error")
 		}
 	}
-
 	return nil
 }

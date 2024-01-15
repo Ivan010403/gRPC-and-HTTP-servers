@@ -16,8 +16,6 @@ type Server struct {
 	port    int
 }
 
-//TODO: change name FileWork
-
 func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int, wrk handlers.FileWork) *Server {
 	srv := grpc.NewServer()
 

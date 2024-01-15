@@ -18,7 +18,7 @@ type File struct {
 }
 
 type Storage struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
 func New(host, user, password, dbname string, port int) (*Storage, error) {
@@ -40,7 +40,7 @@ func New(host, user, password, dbname string, port int) (*Storage, error) {
 		return nil, fmt.Errorf("execution command error: %w", err)
 	}
 
-	return &Storage{db: db}, nil
+	return &Storage{Db: db}, nil
 }
 
 func (s *Storage) SaveFile(filename string) error {
@@ -48,7 +48,7 @@ func (s *Storage) SaveFile(filename string) error {
 
 	dateTime := fmt.Sprintf("%s %s:%s:%s", fmt.Sprint(curr.Date()), strconv.Itoa(curr.Hour()), strconv.Itoa(curr.Minute()), strconv.Itoa(curr.Second()))
 
-	_, err := s.db.Exec(storage.RequestSaveFile, filename, dateTime, dateTime)
+	_, err := s.Db.Exec(storage.RequestSaveFile, filename, dateTime, dateTime)
 	if err != nil {
 		return fmt.Errorf("saving database error: %w", err)
 	}
@@ -57,7 +57,7 @@ func (s *Storage) SaveFile(filename string) error {
 }
 
 func (s *Storage) DeleteFile(filename string) error {
-	_, err := s.db.Exec(storage.RequestDeleteFile, filename)
+	_, err := s.Db.Exec(storage.RequestDeleteFile, filename)
 	if err != nil {
 		return fmt.Errorf("deleting database error: %w", err)
 	}
@@ -70,7 +70,7 @@ func (s *Storage) UpdateFile(filename string) error {
 
 	dateTime := fmt.Sprintf("%s %s:%s:%s", fmt.Sprint(curr.Date()), strconv.Itoa(curr.Hour()), strconv.Itoa(curr.Minute()), strconv.Itoa(curr.Second()))
 
-	_, err := s.db.Exec(storage.RequestUpdateFile, dateTime, filename)
+	_, err := s.Db.Exec(storage.RequestUpdateFile, dateTime, filename)
 	if err != nil {
 		return fmt.Errorf("updating database error: %w", err)
 	}
@@ -79,7 +79,7 @@ func (s *Storage) UpdateFile(filename string) error {
 }
 
 func (s *Storage) GetFullData() ([]File, error) {
-	rows, err := s.db.Query(storage.RequestGetFullData)
+	rows, err := s.Db.Query(storage.RequestGetFullData)
 	if err != nil {
 		return nil, fmt.Errorf("gettingFullData database error: %w", err)
 	}
@@ -90,7 +90,7 @@ func (s *Storage) GetFullData() ([]File, error) {
 	for rows.Next() {
 		var file File
 		if err := rows.Scan(&file.Name, &file.Creation_date, &file.Update_date); err != nil {
-			return files, err
+			return files, fmt.Errorf("scanning data from db error: %w", err)
 		}
 		file.Creation_date = file.Creation_date[0:10] + " " + file.Creation_date[11:19]
 		file.Update_date = file.Update_date[0:10] + " " + file.Update_date[11:19]
@@ -98,7 +98,7 @@ func (s *Storage) GetFullData() ([]File, error) {
 		files = append(files, file)
 	}
 	if err = rows.Err(); err != nil {
-		return files, err
+		return files, fmt.Errorf("scanning data from db error: %w", err)
 	}
 	return files, nil
 }

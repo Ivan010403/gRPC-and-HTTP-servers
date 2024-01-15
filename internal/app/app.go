@@ -16,7 +16,7 @@ func NewApp(logger *slog.Logger, cfggrpc config.GRPC_server, cfg config.DataBase
 
 	storage, err := postgres.New(cfg.Host, cfg.User, cfg.Password, cfg.Dbname, cfg.Port)
 	if err != nil {
-		logger.Error("failed to creation db", slog.Any("err", err))
+		logger.Error("creation db error", slog.Any("err", err))
 		return nil
 	}
 
