@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"gRPCserver/internal/storage/postgres"
 	"io"
 	"os"
@@ -62,7 +61,7 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 		}
 	}
 
-	if _, err := os.Stat(name + "." + format); os.IsNotExist(err) {
+	if _, err := os.Stat("../../storage/" + name + "." + format); os.IsNotExist(err) {
 		err = s.Worker.Write(file_bytes.Bytes(), name, format)
 		if err != nil {
 			return status.Error(codes.Internal, "can't write file")
@@ -140,7 +139,6 @@ func (s *CloudServer) GetFullData(request *proto.GetFullDataRequest, stream prot
 	}
 
 	for i := 0; i < len(data); i++ {
-		fmt.Println(data[i])
 		if err := stream.Send(&proto.GetFullDataResponce{Name: data[i].Name, CreationDate: data[i].Creation_date, UpdatingDate: data[i].Update_date}); err != nil {
 			return err
 		}

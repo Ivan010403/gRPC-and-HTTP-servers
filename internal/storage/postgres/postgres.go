@@ -92,6 +92,9 @@ func (s *Storage) GetFullData() ([]File, error) {
 		if err := rows.Scan(&file.Name, &file.Creation_date, &file.Update_date); err != nil {
 			return files, err
 		}
+		file.Creation_date = file.Creation_date[0:10] + " " + file.Creation_date[11:19]
+		file.Update_date = file.Update_date[0:10] + " " + file.Update_date[11:19]
+
 		files = append(files, file)
 	}
 	if err = rows.Err(); err != nil {

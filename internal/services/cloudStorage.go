@@ -69,7 +69,7 @@ func (c *Cloud) Delete(name, file_type string) error {
 		return err
 	}
 
-	err = c.strg.DeleteFile(name)
+	err = c.strg.DeleteFile(name + "." + file_type)
 	if err != nil {
 		c.log.Error("failed to delete file in db", slog.Any("err", err))
 	}
