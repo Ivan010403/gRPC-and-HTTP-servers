@@ -12,9 +12,9 @@ import (
 
 // TODO: add graceful shutdown
 type File struct {
-	name          string
-	creation_date string
-	update_date   string
+	Name          string
+	Creation_date string
+	Update_date   string
 }
 
 type Storage struct {
@@ -22,7 +22,6 @@ type Storage struct {
 }
 
 func New(host, user, password, dbname string, port int) (*Storage, error) {
-
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	db, err := sql.Open("postgres", psqlInfo)
@@ -41,7 +40,6 @@ func New(host, user, password, dbname string, port int) (*Storage, error) {
 		return nil, fmt.Errorf("execution command error: %w", err)
 	}
 
-	fmt.Println("run db")
 	return &Storage{db: db}, nil
 }
 
@@ -61,7 +59,7 @@ func (s *Storage) SaveFile(filename string) error {
 func (s *Storage) DeleteFile(filename string) error {
 	_, err := s.db.Exec(storage.RequestDeleteFile, filename)
 	if err != nil {
-		return fmt.Errorf("saving database error: %w", err)
+		return fmt.Errorf("deleting database error: %w", err)
 	}
 
 	return nil
@@ -74,7 +72,7 @@ func (s *Storage) UpdateFile(filename string) error {
 
 	_, err := s.db.Exec(storage.RequestUpdateFile, dateTime, filename)
 	if err != nil {
-		return fmt.Errorf("saving database error: %w", err)
+		return fmt.Errorf("updating database error: %w", err)
 	}
 
 	return nil
@@ -83,7 +81,7 @@ func (s *Storage) UpdateFile(filename string) error {
 func (s *Storage) GetFullData() ([]File, error) {
 	rows, err := s.db.Query(storage.RequestGetFullData)
 	if err != nil {
-		return nil, fmt.Errorf("saving database error: %w", err)
+		return nil, fmt.Errorf("gettingFullData database error: %w", err)
 	}
 	defer rows.Close()
 
@@ -91,7 +89,7 @@ func (s *Storage) GetFullData() ([]File, error) {
 
 	for rows.Next() {
 		var file File
-		if err := rows.Scan(&file.name, &file.creation_date, &file.update_date); err != nil {
+		if err := rows.Scan(&file.Name, &file.Creation_date, &file.Update_date); err != nil {
 			return files, err
 		}
 		files = append(files, file)

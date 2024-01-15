@@ -19,7 +19,7 @@ func main() {
 
 	cfg, err := config.ReadConfig()
 	if err != nil {
-		logger.Error("failed to read config")
+		logger.Error("failed to read config", slog.Any("err", err))
 		return
 	}
 

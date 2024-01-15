@@ -30,6 +30,7 @@ type CloudServer struct {
 }
 
 // TODO: add validation ON ALL FILE
+// TODO: make normal logging!!
 func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 	s.ChanSave <- struct{}{}
 	defer func() {
@@ -40,7 +41,7 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 
 	r, err := stream.Recv()
 	if err != nil {
-		return fmt.Errorf("can not get NameFile and FileFormat from req")
+		return status.Error(codes.Internal, "can't read namefile and formatfile from stream")
 	}
 	name := r.GetNameFile()
 	format := r.GetFileFormat()
@@ -48,28 +49,28 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 	for {
 		r, err := stream.Recv()
 		if err == io.EOF {
-			stream.SendAndClose(&proto.UploadFileResponce{FullName: r.NameFile + r.FileFormat})
+			stream.SendAndClose(&proto.UploadFileResponce{FullName: name + "." + format})
 			break
 		}
 		if err != nil {
-			return err
+			return status.Error(codes.Internal, "can't read from stream")
 		}
 
 		_, err = file_bytes.Write(r.GetFile())
 		if err != nil {
-			return fmt.Errorf("failed to write in internal buff %w", err)
+			return status.Error(codes.Internal, "can't write into internal buff")
 		}
 	}
 
 	if _, err := os.Stat(name + "." + format); os.IsNotExist(err) {
 		err = s.Worker.Write(file_bytes.Bytes(), name, format)
 		if err != nil {
-			return fmt.Errorf("failed in calling Write() %w", err)
+			return status.Error(codes.Internal, "can't write file")
 		}
 	} else {
 		err = s.Worker.Update(file_bytes.Bytes(), name, format)
 		if err != nil {
-			return fmt.Errorf("failed in calling Update() %w", err)
+			return status.Error(codes.Internal, "can't update file")
 		}
 	}
 	return nil
@@ -81,18 +82,20 @@ func (s *CloudServer) DeleteFile(ctx context.Context, request *proto.DeleteFileR
 		<-s.ChanDelete
 	}()
 	//TODO: change that unconvenient
-	full_name := request.GetNameFile() + "." + request.GetFileFormat()
-	err := s.Worker.Delete(request.GetNameFile(), request.GetFileFormat())
+	name := request.GetNameFile()
+	format := request.GetFileFormat()
+
+	err := s.Worker.Delete(name, format)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "can't delete file")
 	}
 
-	return &proto.DeleteFileResponce{FullName: full_name}, nil
+	return &proto.DeleteFileResponce{FullName: name + format}, nil
 
 }
 
-// TODO: new chan and new operation
+// TODO: is it new chan and new operation???
 func (s *CloudServer) GetFile(request *proto.GetFileRequest, stream proto.Cloud_GetFileServer) error {
 	s.ChanDelete <- struct{}{}
 	defer func() {
@@ -114,13 +117,34 @@ func (s *CloudServer) GetFile(request *proto.GetFileRequest, stream proto.Cloud_
 			buff.File = data[currentByte : currentByte+1024]
 		}
 		if err := stream.Send(buff); err != nil {
-			return err
+			return status.Error(codes.Internal, "can't send file")
 		}
 	}
 
 	return nil
 }
 
-func (s *CloudServer) GetFullData(*proto.GetFullDataRequest, proto.Cloud_GetFullDataServer) error {
-	panic("implement me")
+func (s *CloudServer) GetFullData(request *proto.GetFullDataRequest, stream proto.Cloud_GetFullDataServer) error {
+	s.ChanCheck <- struct{}{}
+	defer func() {
+		<-s.ChanCheck
+	}()
+
+	data, err := s.Worker.GetFullData()
+	if err != nil {
+		return status.Error(codes.Internal, "can't get full data")
+	}
+
+	if err := stream.Send(&proto.GetFullDataResponce{Size: int64(len(data))}); err != nil {
+		return status.Error(codes.Internal, "can't send size of full data")
+	}
+
+	for i := 0; i < len(data); i++ {
+		fmt.Println(data[i])
+		if err := stream.Send(&proto.GetFullDataResponce{Name: data[i].Name, CreationDate: data[i].Creation_date, UpdatingDate: data[i].Update_date}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -3,7 +3,7 @@ module gRPCserver
 go 1.22rc1
 
 require (
-	github.com/Ivan010403/proto v0.0.2
+	github.com/Ivan010403/proto v0.0.4
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.60.1
 )

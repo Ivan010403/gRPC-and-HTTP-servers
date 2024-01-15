@@ -15,11 +15,12 @@ type App struct {
 func NewApp(logger *slog.Logger, cfggrpc config.GRPC_server, cfg config.DataBase) *App {
 
 	storage, err := postgres.New(cfg.Host, cfg.User, cfg.Password, cfg.Dbname, cfg.Port)
-
 	if err != nil {
 		logger.Error("failed to creation db", slog.Any("err", err))
 		return nil
 	}
+
+	logger.Info("database has been created successfully")
 
 	cloud := cloudStorage.NewCloud(logger, storage)
 

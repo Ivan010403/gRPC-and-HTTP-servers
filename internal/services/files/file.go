@@ -57,7 +57,7 @@ func (i *File) UpdateFile(data []byte) (string, error) {
 	var file *os.File
 	path := i.Name + "." + i.Filetype
 
-	file, err := os.Open(path)
+	file, err := os.Create(path)
 	if err != nil {
 		return "", err
 	}
