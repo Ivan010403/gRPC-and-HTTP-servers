@@ -17,7 +17,7 @@ func TestHandlerUpload(t *testing.T) {
 	chunkSize := 1024
 
 	for i := 0; i < 10; i++ {
-		data := makeBuff(i)
+		data := MakeBuff(i)
 
 		stream, err := cl.CloudCl.UploadFile(ctx)
 		if err != nil {
@@ -59,7 +59,7 @@ func TestHandlerUpload(t *testing.T) {
 	}
 }
 
-func makeBuff(i int) []byte {
+func MakeBuff(i int) []byte {
 	buff := make([]byte, (i+1)*10*10000000)
 
 	rand.Read(buff)

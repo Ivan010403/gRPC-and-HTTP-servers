@@ -2,7 +2,6 @@ package tests
 
 import (
 	"bytes"
-	"crypto/rand"
 	main_test "gRPCserver/tests/main"
 	"io"
 	"strconv"
@@ -26,7 +25,7 @@ func TestHandlerUpload_Concurent(t *testing.T) {
 			defer wg.Done()
 			t.Log("starting", i)
 
-			data := makeBuff_(i)
+			data := MakeBuff(i)
 
 			stream, err := cl.CloudCl.UploadFile(ctx)
 			if err != nil {
@@ -70,11 +69,4 @@ func TestHandlerUpload_Concurent(t *testing.T) {
 	}
 
 	wg.Wait()
-}
-
-func makeBuff_(i int) []byte {
-	buff := make([]byte, 5000000)
-
-	rand.Read(buff)
-	return buff
 }
