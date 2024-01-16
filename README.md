@@ -4,43 +4,22 @@
 
 ![readme drawio](https://github.com/Ivan010403/gRPC-server/assets/125370827/09c722d6-5c48-465e-9725-ca7d010581c0)
 
-1. Transport layer: содержит в себе имплементацию сгенерированного protoc'ом интерфейса, создание и инициализацию gRPC сервера
-2. Service layer: содержит в себе бизнес-логику нашего приложения. Создаётся отдельный интерфейс с методами, которые используются внутри транспортного слоя.
-3. Storage layer: содержит в себе логику взаимодействия с базой данных.
-4. FileWorker layer: дополнительный слой, методы которого используются в бизнес-логике (в случае модификации приложения, например, добавления работы с другими типами данных, не придётся переписывать сервисный слой, а просто сделать отдельного worker'а)
+1. Transport layer: содержит в себе реализацию http сервера для веб интерфейса, включая все handler'ы. 
+2. Service layer: содержит в себе реализацию gRPC клиента.
 
 Все слои собираются в общий тип App, который содержит в себе конструктор для инициализации всего приложения, и именно с ним мы взаимодействуем из нашего main. 
    
-# gRPC сервер
+# HTTP сервер
 
-1. Так как мы подписываем своего рода "контракт", то наш сервер должен имплементировать все объявленные в интерфейсе CloudServer (сгенерированном утилитой protoc интерфейсе) методы:
-```
-type CloudServer interface {
-	UploadFile(Cloud_UploadFileServer) error
-	DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponce, error)
-	GetFile(*GetFileRequest, Cloud_GetFileServer) error
-	GetFullData(*GetFullDataRequest, Cloud_GetFullDataServer) error
-	mustEmbedUnimplementedCloudServer()
-}
-```
-Вся реализация handler'ов и описание обработчика, который полностью имплементирует интерфейс CloudServer содержится в директории ```internal/transport/handlers```. Ниже указана структура нашего обработчика (каналы созданы для ограничения количества подключений)
-```
-type CloudServer struct {
-	ChanUploadGet chan struct{}
-	ChanCheck     chan struct{}
-	proto.UnimplementedCloudServer
-	Worker FileWork
-}
-```
-2. Ограничение количества одновременных подключений реализовано посредством использования буферизированных каналов ```ChanUploadGet``` и ```ChanCheck```. При каждом запуске хэндлера мы кладём в соответствующий канал пустую структуру, а в конце выполнения мы читаем структуру из канала. Тем самым, количество конкурентных выполнений ограничено размером буферизированного канала:
-```
-s.ChanUploadGet <- struct{}{}
-defer func() {
-	<-s.ChanUploadGet
-}()
-```
+Создание и инициализация сервера находится в ```internal/app/http-server```, реализация обработчиков в ```internal/http-server/handlers```. Список эндпоинтов:
 
-3. Методы создания сервера и подключаем к нему обработчика содержатся в ```internal/app/grpc_server```
+| Энжпоинт | Метод | Обработчик и описание                                      |
+|----------|-------|------------------------------------------------------------|
+| /	   | GET   | Отображение index.html, запуск GetFullData                 |
+| /upload  | POST  | Запуск client.UploadFile() c таймаутом 10 секунд (контекст)|
+| /get     | POST  | Запуск client.GetFile() c таймаутом 10 секунд (контекст)   |
+| /delete  | POST  | Запуск client.DeleteFile() c таймаутом 3 секунды (контекст)|
+
 
 # Service layer
 
