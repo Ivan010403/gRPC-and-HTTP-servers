@@ -1,0 +1,13 @@
+env: "prod"
+
+grpc_server:
+  port: 4545
+  maxReadWriteConn: 10
+  maxCheckConn: 100
+
+database:
+  host: "postgres"
+  port: 5432
+  user: "postgres"
+  password: "vany2003"
+  dbname: "Files"
