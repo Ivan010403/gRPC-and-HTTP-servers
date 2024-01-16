@@ -11,7 +11,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      HOST: root@188.124.51.67
+      HOST: root@31.129.44.151
       DEPLOY_DIRECTORY: /root/apps/server
       CONFIG_PATH: /root/apps/server/config/prod.yaml
       ENV_FILE_PATH: /root/apps/server/config.env
