@@ -37,3 +37,24 @@ defer func() {
 	<-s.ChanUploadGet
 }()
 ```
+
+3. Методы создания сервера и подключаем к нему обработчика содержатся в ```internal/app/grpc_server```
+
+# Service layer
+
+1. Вся реализация бизнес-логики содержится в директории ```internal/services```. Также создаётся дополнительный интерфейс, который мы пишем в месте использования, а именно в сервисном слое:
+
+```
+type FileWork interface {
+	Write([]byte, string, string) error
+	Update([]byte, string, string) error
+	Delete(string, string) error
+	Get(string, string) ([]byte, error)
+	GetFullData() ([]postgres.File, error)
+}
+```
+2. Тип ```Cloud``` из сервисного слоя реализует этот интерфейс, именно поэтому мы передаём его в наш транспортный слой.
+
+# Storage and FileWork layer
+
+1. Реализация слоёв содержится в  ```internal/storage``` и в  ```internal/services/files``` соответственно.
