@@ -23,17 +23,16 @@ type FileWork interface {
 }
 
 type CloudServer struct {
-	ChanSave   chan struct{}
-	ChanDelete chan struct{}
-	ChanCheck  chan struct{}
+	ChanUploadGet chan struct{}
+	ChanCheck     chan struct{}
 	proto.UnimplementedCloudServer
 	Worker FileWork
 }
 
 func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
-	s.ChanSave <- struct{}{}
+	s.ChanUploadGet <- struct{}{}
 	defer func() {
-		<-s.ChanSave
+		<-s.ChanUploadGet
 	}()
 
 	file_bytes := bytes.Buffer{}
@@ -76,9 +75,9 @@ func (s *CloudServer) UploadFile(stream proto.Cloud_UploadFileServer) error {
 }
 
 func (s *CloudServer) DeleteFile(ctx context.Context, request *proto.DeleteFileRequest) (*proto.DeleteFileResponce, error) {
-	s.ChanDelete <- struct{}{}
+	s.ChanUploadGet <- struct{}{}
 	defer func() {
-		<-s.ChanDelete
+		<-s.ChanUploadGet
 	}()
 
 	name := request.GetNameFile()
@@ -96,9 +95,9 @@ func (s *CloudServer) DeleteFile(ctx context.Context, request *proto.DeleteFileR
 
 // TODO: is it new chan and new operation???
 func (s *CloudServer) GetFile(request *proto.GetFileRequest, stream proto.Cloud_GetFileServer) error {
-	s.ChanDelete <- struct{}{}
+	s.ChanUploadGet <- struct{}{}
 	defer func() {
-		<-s.ChanDelete
+		<-s.ChanUploadGet
 	}()
 
 	data, err := s.Worker.Get(request.GetNameFile(), request.GetFileFormat())

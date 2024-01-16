@@ -60,7 +60,7 @@ func TestHandlerUpload(t *testing.T) {
 }
 
 func MakeBuff(i int) []byte {
-	buff := make([]byte, (i+1)*10*10000000)
+	buff := make([]byte, (i+1)*10*1000000)
 
 	rand.Read(buff)
 	return buff

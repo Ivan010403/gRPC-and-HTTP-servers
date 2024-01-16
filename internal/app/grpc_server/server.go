@@ -16,18 +16,16 @@ type Server struct {
 	port    int
 }
 
-func NewServer(logger *slog.Logger, port, wrkSaveDelete, wrkCheckFiles int, wrk handlers.FileWork) *Server {
+func NewServer(logger *slog.Logger, port, wrkUploadGetFiles, wrkCheckFiles int, wrk handlers.FileWork) *Server {
 	srv := grpc.NewServer()
 
-	wrkSave := make(chan struct{}, wrkSaveDelete)
-	wrkDelete := make(chan struct{}, wrkSaveDelete)
+	wrkUploadGet := make(chan struct{}, wrkUploadGetFiles)
 	wrkCheck := make(chan struct{}, wrkCheckFiles)
 
 	proto.RegisterCloudServer(srv, &handlers.CloudServer{
-		ChanSave:   wrkSave,
-		ChanDelete: wrkDelete,
-		ChanCheck:  wrkCheck,
-		Worker:     wrk,
+		ChanUploadGet: wrkUploadGet,
+		ChanCheck:     wrkCheck,
+		Worker:        wrk,
 	})
 
 	return &Server{

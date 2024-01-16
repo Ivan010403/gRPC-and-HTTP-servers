@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"context"
+	"fmt"
 	"gRPCserver/internal/config"
 	"testing"
 	"time"
@@ -21,6 +22,8 @@ func New(t *testing.T) (context.Context, *Test) {
 	t.Helper()
 
 	cfg := config.ReadConfigFromPath("../config/local.yaml")
+
+	fmt.Println(cfg)
 
 	ctx, cancelCtx := context.WithTimeout(context.Background(), time.Second*20)
 
